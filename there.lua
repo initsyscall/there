@@ -78,7 +78,9 @@ end
 local function lines(s)
   local t = {}
   for line in s:gmatch("[^\n]+") do
-    t[#t + 1] = line
+    if line ~= "null" then
+      t[#t + 1] = line
+    end
   end
   return t
 end
@@ -177,6 +179,9 @@ local function prune()
     return
   end
   pruned = true
+  if #jqout('.paths[] | select(.path | type != "string") | .path // "x"') > 0 then
+    die(STORE .. " has an entry with no path; drop that entry")
+  end
   local all = lines(jqout(".paths[].path"))
   local live = stillthere(all)
   if #live == #all then
