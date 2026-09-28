@@ -205,8 +205,8 @@ local function targets(shell)
   return out
 end
 
-local function emit(shell, runner)
-  local w = capture("lua " .. q(runner) .. " init " .. shell)
+local function emit(shell, runner, home)
+  local w = capture("HOME=" .. q(home or HOME) .. " lua " .. q(runner) .. " init " .. shell)
   if w == nil or trim(w) == "" then
     return nil
   end
@@ -380,8 +380,10 @@ local function install(shell)
     say("  " .. good("reachable") .. "  " .. url)
     say("  " .. good("parses") .. "     " .. dim("as lua, " .. #(readfile(part) or "") .. " bytes"))
     say("")
+    local box = os.tmpname() .. ".d"
+    os.execute("mkdir -p " .. q(box))
     for _, t in ipairs(list) do
-      local w = emit(t.shell, part)
+      local w = emit(t.shell, part, box)
       if w == nil then
         say("  " .. bad("could not build wrapper") .. "  " .. short(t.path))
         say("")
@@ -390,6 +392,7 @@ local function install(shell)
         show(t.path, w)
       end
     end
+    os.execute("rm -rf " .. q(box))
     os.remove(part)
     say("")
     say("  " .. dim("dry run, nothing was written"))
